@@ -1,0 +1,11 @@
+sort1 uses: bubble
+
+How do you know?: the fastest with already sorted dataset but the slower with the other(Omega(n), O(n^2))
+
+sort2 uses: merge
+
+How do you know?: the fastest with big random dataset (Theta(nlogn))
+
+sort3 uses: selection
+
+How do you know?: keep the same behavior with both sorted and random dataset (Theta(n^2))
