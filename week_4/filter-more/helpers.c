@@ -12,10 +12,10 @@ void grayscale(int height, int width, RGBTRIPLE image[height][width])
 	i = 0;
 	while (i < height)
 	{
-		grey = 0;
 		j = 0;
 		while (j < width)
 		{
+			grey = 0;
 			grey += image[i][j].rgbtBlue;
 			grey += image[i][j].rgbtGreen;
 			grey += image[i][j].rgbtRed;
@@ -33,13 +33,91 @@ void grayscale(int height, int width, RGBTRIPLE image[height][width])
 // Reflect image horizontally
 void reflect(int height, int width, RGBTRIPLE image[height][width])
 {
-    return;
+	int		i;
+	int		j;
+	RGBTRIPLE	tmp;
+
+	i = 0;
+	while (i < height)
+	{
+		j = 0;
+		while (j < width / 2)
+		{
+			tmp = image[i][j];
+			image[i][j] = image[i][width - j - 1];
+			image[i][width - j - 1] = tmp;
+			j++;
+		}
+		i++;
+	}
+	return;
 }
 
 // Blur image
 void blur(int height, int width, RGBTRIPLE image[height][width])
 {
-    return;
+	int		i;
+	int		j;
+	int		x;
+	int		y;
+	int		r;
+	int		g;
+	int		b;
+	int		count;
+	RGBTRIPLE	tmp_image[height][width];
+
+	i = 0;
+	while (i < height)
+	{
+		j = 0;
+		while (j < width)
+		{
+			count = 0;
+			r = 0;
+			g = 0;
+			b = 0;
+			y = i - 1;
+			if (y < 0)
+				y = 0;
+			while (y <= i + 1 && y < height)
+			{
+				x = j - 1;
+				if (x < 0)
+					x = 0;
+				while (x <= j + 1 && x < width)
+				{
+					r +=  image[y][x].rgbtRed;
+					g += image[y][x].rgbtGreen;
+					b += image[y][x].rgbtBlue;
+					x++;
+					count++;
+				}
+				y++;
+			}
+			r /= count;
+			g /= count;
+			b /= count;
+			tmp_image[i][j].rgbtRed = r;
+			tmp_image[i][j].rgbtGreen = g;
+			tmp_image[i][j].rgbtBlue = b;
+			j++;
+		}
+		i++;
+	}
+	i = 0;
+	while (i < height)
+	{
+		j = 0;
+		while (j < width)
+		{
+			image[i][j].rgbtRed = tmp_image[i][j].rgbtRed;
+			image[i][j].rgbtGreen = tmp_image[i][j].rgbtGreen;
+			image[i][j].rgbtBlue = tmp_image[i][j].rgbtBlue;
+			j++;
+		}
+		i++;
+	}
+	return;
 }
 
 // Detect edges
