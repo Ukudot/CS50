@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "dictionary.h"
 
@@ -16,8 +17,7 @@ typedef struct node
 }
 node;
 
-// TODO: Choose number of buckets in hash table
-const unsigned int N = 26 * 26 * 26 * 26;
+const unsigned int N = 27 * 27 * 27 * 27;
 
 // Hash table
 node *table[N];
@@ -25,12 +25,21 @@ node *table[N];
 // Protorypes
 void	ft_cpword(char *dest, char *src);
 void	ft_insert(char *word);
+int	ft_toupper(const char c);
 
 // Returns true if word is in dictionary, else false
 bool check(const char *word)
 {
-    // TODO
-    return true;
+	node	*current;
+
+	current = table[hash(word)];
+	while (current)
+	{
+		if (strcasecmp(current->word, word) == 0)
+			return (true);
+		current = current->next;
+	}
+	return (false);
 }
 
 // Hashes word to a number
@@ -43,17 +52,16 @@ unsigned int hash(const char *word)
 	int	len;
 
 	len = strlen(word);
-
-	i = (toupper(word[0]) - 'A') * 26 * 26 * 26;
+	i = (ft_toupper(word[0]) - 'A') * 27 * 27 * 27;
 	if (len == 1)
 		return (i);
-	j = (toupper(word[1]) - 'A') * 26 * 26;
+	j = (ft_toupper(word[1]) - 'A') * 27 * 27;
 	if (len == 2)
 		return (i + j);
-	k = (toupper(word[2]) - 'A') * 26;
+	k = (ft_toupper(word[2]) - 'A') * 27;
 	if (len == 3)
 		return (i + j + k);
-	x = (toupper(word[3]) - 'A');
+	x = (ft_toupper(word[3]) - 'A');
 	return (i + j + k + x);
 }
 
@@ -179,4 +187,13 @@ void	ft_cpword(char *dest, char *src)
 		i++;
 	}
 	dest[i] = src[i];
+}
+
+int	ft_toupper(const char c)
+{
+	if (c >= 'a' && c <= 'z')
+		return (c - 32);
+	if (c == '\'')
+		return ('Z' + 1);
+	return (c);
 }
