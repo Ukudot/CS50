@@ -26,7 +26,7 @@ SELECT name, transcription
 -- Raymond: As the thief was leaving the bakery, they called someone who talked to them for less than a minute.
 -- In the call, I heard the thief say that they were planning to take the earliest flight out of Fiftyville tomorrow.
 -- The thief then asked the person on the other end of the phone to purchase the flight ticket.
--- Accordingly with the first interviews I checked the plates of card leaving the bakery park between 10:15 and 10:25
+-- Accordingly with the first interview we checked the plates of card leaving the bakery park between 10:15 and 10:25
 SELECT licencse_plate
   FROM bakery_security_logs
  WHERE year = 2021
@@ -44,3 +44,152 @@ SELECT licencse_plate
 -- L93JTIZ
 -- 322W7JE
 -- 0NTHK55
+-- Using these informations and the second interview we can interpolate the owner of the car with the people that withdraw money that day:
+SELECT p.name, a_t.amount 
+  FROM bank_accounts AS b_a
+	INNER JOIN people AS p
+	ON b_a.person_id = p.id 
+	   AND p.license_plate IN 
+		(SELECT license_plate 
+		   FROM bakery_security_logs 
+		  WHERE year = 2021 
+		    AND month = 7 
+		    AND day = 28 
+		    AND hour = 10 
+		    AND minute >= 15 
+		    AND minute <= 25 
+		    AND activity = 'exit')
+	
+	INNER JOIN atm_transactions AS a_t
+	ON b_a.account_number = a_t.account_number 
+	   AND a_t.year = 2021 
+	   AND a_t.month = 7 
+	   AND a_t.day = 28
+           AND a_t.atm_location = 'Leggett Street'	
+	   AND a_t.transaction_type = 'withdraw';
+-- Result (name|amount withdrawn):
+-- Bruce|50
+-- Diana|35
+-- Iman|20
+-- Luca|48
+-- Furthermore we can interpolate this informations with the ones given in the third interview:
+SELECT p.name, a_t.amount 
+  FROM bank_accounts AS b_a
+	INNER JOIN people AS p
+	ON b_a.person_id = p.id 
+	   AND p.license_plate IN 
+		(SELECT license_plate 
+		   FROM bakery_security_logs 
+		  WHERE year = 2021 
+		    AND month = 7 
+		    AND day = 28 
+		    AND hour = 10 
+		    AND minute >= 15 
+		    AND minute <= 25 
+		    AND activity = 'exit')
+	   AND p.phone_number IN
+		(SELECT caller
+		   FROM phone_calls
+		  WHERE year = 2021
+		    AND month = 7
+		    AND day = 28
+		    AND duration < 60)
+	
+	INNER JOIN atm_transactions AS a_t
+	ON b_a.account_number = a_t.account_number 
+	   AND a_t.year = 2021 
+	   AND a_t.month = 7 
+	   AND a_t.day = 28 
+	   AND a_t.transaction_type = 'withdraw';
+-- Result(name|amunt withdrawn):
+-- Bruce|50
+-- Diana|35
+-- Now we can check who was the receiver 
+SELECT id, name 
+  FROM people 
+ WHERE phone_number = 
+	(SELECT receiver 
+	   FROM phone_calls 
+	  WHERE year = 2021 
+	    AND month = 7 
+	    AND day = 28 
+	    AND caller = 
+		(SELECT phone_number 
+		   FROM people 
+		  WHERE name = 'Bruce'));
+-- 864400|Robin
+-- Bruce called to Robin that day
+SELECT id, name 
+  FROM people 
+ WHERE phone_number = 
+	(SELECT receiver 
+	   FROM phone_calls 
+	  WHERE year = 2021 
+	    AND month = 7 
+	    AND day = 28 
+	    AND caller = 
+		(SELECT phone_number 
+		   FROM people 
+		  WHERE name = 'Diana'));
+-- 847116|Philip
+-- While Diana called Philip that day
+-- So both called someone during that day, thus we can check who take a flight from fiftiville the next day:
+SELECT id, day, hour, minute, desttination_airport_id
+  FROM flights 
+ WHERE origin_airport_id =
+	(SELECT id 
+	   FROM airports 
+	   WHERE city = 'Fiftyville') 
+   AND id IN 
+	(SELECT flight_id 
+	   FROM passengers 
+	  WHERE passport_number = 
+		(SELECT passport_number 
+		   FROM people 
+		   WHERE name = 'Bruce')) 
+   AND day = 29 
+ ORDER BY hour ASC, minute ASC;
+-- Result:
+-- 36|29|8|20|4
+SELECT id, day, hour, minute, desttination_airport_id
+  FROM flights 
+ WHERE origin_airport_id =
+	(SELECT id 
+	   FROM airports 
+	   WHERE city = 'Fiftyville') 
+   AND id IN 
+	(SELECT flight_id 
+	   FROM passengers 
+	  WHERE passport_number = 
+		(SELECT passport_number 
+		   FROM people 
+		   WHERE name = 'Diana')) 
+   AND day = 29 
+ ORDER BY hour ASC, minute ASC;
+-- Result:
+-- 18|29|16|0|6
+-- Meanwhile the flight in table for the 07/29/2021 were:
+SELECT id, day, hour, minute 
+  FROM flights 
+ WHERE origin_airport_id = 
+	(SELECT id 
+	   FROM airports 
+	  WHERE city = 'Fiftyville') 
+   AND day = 29
+   AND month = 7
+   AND year = 2021
+ ORDER BY hour ASC, minute ASC;
+-- Result:
+-- 36|29|8|20
+-- 43|29|9|30
+-- 23|29|12|15
+-- 53|29|15|20
+-- 18|29|16|0
+-- We can finally say that Bruce is the thief cause he took the earliest flight accordigly with the third interview.
+-- We can also check the destination of the flight:
+SELECT city
+  FROM airports
+ WHERE id = 4;
+-- Destination:
+-- New York City;
+-- In coclusion Bruce stole the duck and the next day he took a flight to New York City; the ticket was bought by Robin, his accomplice.
